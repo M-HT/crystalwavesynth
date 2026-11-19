@@ -242,7 +242,7 @@ void CCALL CWS_MidiMessageShort(uint32_t time, uint32_t message)
             break;
 
         case 14: // pitch bend
-            add_to_buffer(time, 6, channel, ((message >> 8) & 0x7f) | ((message << 7) & 0x3f80), 0, 0);
+            add_to_buffer(time, 6, channel, ((message >> 8) & 0x7f) | ((message >> 9) & 0x3f80), 0, 0);
             break;
 
         case 15:
