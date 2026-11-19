@@ -37,7 +37,7 @@ extern event_buffer_t *cws_event_buffer;
 
 
 static uint8_t program_number[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-static uint16_t rpn_number[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static uint16_t rpn_number[16] = { 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff, 0x3fff };
 static uint16_t rpn_value[16][3] = {
     {0x100, 0x2000, 0x2000},
     {0x100, 0x2000, 0x2000},
@@ -203,6 +203,13 @@ void CCALL CWS_MidiMessageShort(uint32_t time, uint32_t message)
                     }
                     break;
 
+                // WARNING: NRPN LSB and MSB are not handled in the original code
+                // so it would change a RPN value when trying to change NRPN value
+                case 98: // NRPN LSB
+                case 99: // NRPN MSB
+                    rpn_number[channel] = 0x3fff;
+                    break;
+
                 case 100: // RPN LSB
                     rpn_number[channel] = (rpn_number[channel] & 0x3f80) | ((message >> 16) & 0x7f);
                     break;
@@ -251,6 +258,10 @@ void CCALL CWS_MidiMessageShort(uint32_t time, uint32_t message)
                 for (channel = 0; channel < 16; channel++)
                 {
                     all_notes_off(time, channel);
+                    rpn_number[channel] = 0x3fff; // WARNING: the original code didn't reset RPN/NRPN number when resetting
+                    rpn_value[channel][0] = 0x100;
+                    rpn_value[channel][1] = 0x2000;
+                    rpn_value[channel][2] = 0x2000;
                     add_to_buffer(time, 5, channel, 121, 0, 0);
                 }
             }
